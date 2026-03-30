@@ -51,7 +51,7 @@
         "phpstan/phpstan": "^2",
         "predis/predis": "^2.2",
         "rector/rector": "^2",
-        "scotteuser/pinecone-php": "^1.0",
+        "scotteuser/pinecone-php": "^1.0.3",
         "symfony/cache": "^7.2",
         "symfony/process": "^v7.1.8",
         "symfony/var-dumper": "^7.2"
