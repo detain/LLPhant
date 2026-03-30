@@ -63,7 +63,7 @@ class PineconeClient
         $response = $this->client->data()->vectors()->query(
             vector: $vector,
             namespace: $namespace,
-            filter: $filter,
+            filter: $filter ?? [],
             topK: $topK,
             includeMetadata: $includeMetadata,
             includeValues: $includeValues
