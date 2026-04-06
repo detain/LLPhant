@@ -13,8 +13,39 @@ class PineconeVectorStore extends VectorStoreBase implements DocumentStore
 
     public function __construct(
         public PineconeClient $client,
-        public string $namespace = self::DEFAULT_NAMESPACE
+        public string $namespace = self::DEFAULT_NAMESPACE,
+        public int $dimension = 0
     ) {
+    }
+
+    /**
+     * Creates an index in Pinecone and returns the index host URL for data-plane operations.
+     * Safe to call when the index already exists (idempotent).
+     *
+     * @param  string  $name  Index name
+     * @param  int  $dimension  Vector dimension (must match the embedding generator)
+     * @param  string  $metric  Similarity metric ('cosine', 'euclidean', 'dotproduct')
+     * @param  string|null  $controlHost  Override for the control-plane base URL (see PineconeClient::createIndex)
+     * @return string The index host URL to use for data-plane operations
+     */
+    public function createIndex(
+        string $name,
+        int $dimension,
+        string $metric = 'cosine',
+        ?string $controlHost = null
+    ): string {
+        return $this->client->createIndex($name, $dimension, $metric, $controlHost);
+    }
+
+    /**
+     * Deletes a Pinecone index. Safe to call when the index does not exist (idempotent).
+     *
+     * @param  string  $name  Index name
+     * @param  string|null  $controlHost  Override for the control-plane base URL (see PineconeClient::deleteIndex)
+     */
+    public function deleteIndex(string $name, ?string $controlHost = null): void
+    {
+        $this->client->deleteIndex($name, $controlHost);
     }
 
     public function addDocument(Document $document): void
@@ -33,7 +64,7 @@ class PineconeVectorStore extends VectorStoreBase implements DocumentStore
 
         $vectors = array_map(
             fn (Document $document): array => [
-                'id' => $document->hash,
+                'id' => $document->hash !== '' ? $document->hash : hash('sha256', $document->formattedContent ?? $document->content),
                 'values' => $document->embedding,
                 'metadata' => [
                     'content' => $document->content,
@@ -82,8 +113,12 @@ class PineconeVectorStore extends VectorStoreBase implements DocumentStore
             throw new SecurityException('Invalid source type or name');
         }
 
-        $stats = $this->client->describeIndexStats();
-        $dimension = $stats['dimension'] ?? 1536;
+        if ($this->dimension > 0) {
+            $dimension = $this->dimension;
+        } else {
+            $stats = $this->client->describeIndexStats();
+            $dimension = $stats['dimension'] ?? 1536;
+        }
         $zeroVector = array_fill(0, $dimension, 0.0);
 
         $filter = [

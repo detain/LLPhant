@@ -42,6 +42,8 @@ services:
             MONGODB_CONNECTION_STRING: ${MONGODB_CONNECTION_STRING}
             LMSTUDIO_URL: ${LMSTUDIO_URL}
             MODELSLAB_API_KEY: ${MODELSLAB_API_KEY}
+            PINECONE_HOST: ${PINECONE_HOST}
+            PINECONE_API_KEY: ${PINECONE_API_KEY}
 
     opensearch:
       image: opensearchproject/opensearch:2.17.1
@@ -144,6 +146,15 @@ services:
       volumes:
         - mongodb-data:/data/db
         - mongodb-config:/data/configdb
+
+    pinecone:
+      image: ghcr.io/pinecone-io/pinecone-local:latest
+      environment:
+        PORT: 5080
+        PINECONE_HOST: localhost
+      ports:
+        - "5080-5090:5080-5090"
+      platform: linux/amd64
 
 volumes:
     typesense-data:
