@@ -197,4 +197,14 @@ class QdrantVectorStore extends VectorStoreBase
             )
         );
     }
+
+    public function deleteCollection(?string $collectionName = null): void
+    {
+        $collectionName = $collectionName ?? $this->collectionName;
+        try {
+            $this->client->collections($collectionName)->delete();
+        } catch (\Exception $e) {
+            // Collection may not exist, which is fine for deletion
+        }
+    }
 }
